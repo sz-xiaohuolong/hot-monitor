@@ -358,6 +358,5 @@ Jev 这类判别式决策模型的用武之地不止热点监控，RAG 检索前
 
 ---
 
-项目开源地址：https://github.com/liyupi/yupi-hot-monitor
 
 TypeSafe Jev 官方文档：https://docs.typesafe.ai/introduction/quickstart
