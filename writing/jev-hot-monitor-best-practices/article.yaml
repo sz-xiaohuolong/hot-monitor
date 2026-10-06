@@ -1,0 +1,16 @@
+{
+  "article_id": "jev-hot-monitor-best-practices",
+  "input": {
+    "audience": "有一定技术基础、正在构建AI应用或热点监控系统的个人开发者与全栈工程师",
+    "core_ideas": [
+      "讲解Jev模型是什么（TypeSafe System One 判别式决策模型，输出类型化概率决策，不产文本）",
+      "官方文档中的核心特性（Choice / Noul / Score 三种 primitive，极速 70-500ms，输出 token 免费）",
+      "项目中如何使用这些特性（从全部交由 LLM 重构为 Jev 保守粗筛 + LLM 全量精判的两级流水线）",
+      "测试效果与避坑经验（真实拦截明确垃圾且 0 误杀真实新闻，网络代理与多后端兼容，Ark 429 熔断时 Jev 独立工作）"
+    ],
+    "style": "tutorial",
+    "topic": "关于Jev模型在热点监控项目中的最佳实践"
+  },
+  "schema_version": 2,
+  "status": "WAITING_OUTLINE_APPROVAL"
+}

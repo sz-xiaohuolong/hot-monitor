@@ -48,7 +48,7 @@
 | Bug | Ark 5 小时配额限制（本轮 429 实证） | 幸存者通道支持 QuickRouter，或提升 Ark 配额（用户决定） |
 | Decision | 是否提交当前 36 个文件的工作树；是否建 Release 并冻结范围 | 用户 |
 | Decision | `skills/hot-monitor` 与 server 双实现是否同步新源 | 用户（已记录于 DOCUMENT_MAP） |
-| Decision | Jev 决策预筛层是否接入（TypeSafe System One 模型） | `docs/vibe/PROPOSED_DESIGN-jev-prefilter.md`（Status: IMPLEMENTED）| 已批准并实现；DEC-002 记录决策 |
+| Decision | Jev 决策预筛层是否接入（TypeSafe System One 模型） | `docs/vibe/features/jev-prefilter/`（DESIGN/IMPLEMENTATION/VERIFICATION；DEC.md）| 已批准并实现；当前按负责人要求 JEV_ENABLED=false 关闭 |
 | Decision | JEV_API_KEY 已暴露于对话，建议轮换 | 安全 | 用户（验证完成后轮换） |
 
 ## Debug Snapshot

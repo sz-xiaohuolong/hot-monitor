@@ -4,7 +4,7 @@
 - Date: 2026-10-05
 - Related Release: 未建立
 - Related REQ/AC: docs/REQUIREMENTS.md §5（AI 分析）
-- Related Decisions: DEC-001（provider 抽象）；PROPOSED_DESIGN-jev-prefilter（DESIGN-002）
+- Related Decisions: DEC-001（provider 抽象，见 `../provider-abstraction/DEC.md`）；本功能 DESIGN（`DESIGN.md`）
 - Decision Owner: 项目负责人
 
 ## Context and Current Requirement

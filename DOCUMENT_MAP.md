@@ -9,7 +9,8 @@
 | 产品范围与验收 | `docs/REQUIREMENTS.md` | `基线存在；范围已改未冻结` | 原始需求文档；本会话已发生两次产品变更（扫描周期、AI provider），均已记录但未作为 Release 冻结 |
 | 当前架构 | `docs/vibe/TECH_DESIGN.md` | `已核验` | 基于当前代码/配置/运行证据编写（2026-10-05） |
 | 当前进度 | `docs/vibe/PROGRESS.md` | `已核验` | 由 Git/测试核验 |
-| 决策记录 | `docs/vibe/decisions/DEC-001-provider-abstraction.md` | `已记录` | 唯一重大决策；其他历史选择未记录 |
+| 决策记录 | `docs/vibe/features/*/DEC.md` | `已记录` | DEC-001（provider-abstraction）、DEC-002（jev-prefilter）归位到各自功能文件夹 |
+| 功能文档 | `docs/vibe/features/<feature>/`（REQUIREMENT/DESIGN/IMPLEMENTATION/VERIFICATION） | `已建立` | 五个功能：provider-abstraction / new-sources / scan-health / scan-frequency / jev-prefilter |
 | Bug 记录 | `docs/vibe/bugs/` | `缺失` | 本会话发现 3 个已知问题，记录于 PROGRESS 风险表，未开 BUG 文档 |
 | 测试与验证 | `server/src/__tests__/` + `docs/vibe/PROGRESS.md` 验证表 | `已核验` | 命令见 PROGRESS |
 | 本地运行 | `docs/LOCAL_SETUP.md` | `已核验` | 已同步扫描周期变更 |
