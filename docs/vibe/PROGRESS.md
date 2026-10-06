@@ -2,14 +2,15 @@
 
 | 范围 | 当前事实 | 阻塞/未验证 | 下一步 |
 |---|---|---|---|
-| 全仓 | Workflow State: 未建立（init 审计完成）；Operational Status: ACTIVE | 本会话 36 个文件未提交（含先前既有改动） | 待用户决定提交边界 |
-| 本会话工作 | 4 项已实现并经真实运行验证（见任务状态表） | 既有 6 collector 的失败静默未修复 | 补齐健康度覆盖或明确拒绝 |
-| 验证 | server 128 passed / 11 skipped；tsc/build 全绿；真实扫描 85 新热点 | 未跑完整 Release Verification（无 Release） | 建 Release 后逐项 AC 验证 |
+| Release v1 | Workflow State: READY_TO_SHIP（VERIFICATION 5 REQ/14 AC 全通过）；Operational Status: ACTIVE | JEV_API_KEY 轮换未执行；旧 6 collector 失败静默未修 | 提交边界已定并推送（4501029）；待新需求建 v2 |
+| 当前运行 | Jev 关闭（JEV_ENABLED=false，按负责人要求）；服务 3001/5173 运行中 | Ark 5h 配额限制 | 可选：幸存者通道指向 QuickRouter |
+| 验证 | server 145 passed / 11 skipped；tsc/build 全绿 | 无未覆盖 AC | 见 releases/v1/VERIFICATION.md |
 
 ## 定位信息
 
-- Current Requirement Baseline: `docs/REQUIREMENTS.md`（基线存在；本会话两处产品变更已记录于文档，未冻结为新 Release）
-- Last Stable Commit/Artifact: `cd48b08`（HEAD；工作树含 36 个未提交变更）
+- Current Requirement Baseline: `docs/vibe/releases/v1/SPEC.md`（v1 已冻结）
+- Current Release: `v1`（docs/vibe/releases/v1/）
+- Last Stable Commit/Artifact: `4501029`（已推送 sz/hot-monter master）
 - Last Updated: 2026-10-05
 
 ## 任务状态
@@ -48,7 +49,7 @@
 | Bug | Ark 5 小时配额限制（本轮 429 实证） | 幸存者通道支持 QuickRouter，或提升 Ark 配额（用户决定） |
 | Decision | 是否提交当前 36 个文件的工作树；是否建 Release 并冻结范围 | 用户 |
 | Decision | `skills/hot-monitor` 与 server 双实现是否同步新源 | 用户（已记录于 DOCUMENT_MAP） |
-| Decision | Jev 决策预筛层是否接入（TypeSafe System One 模型） | `docs/vibe/features/jev-prefilter/`（DESIGN/IMPLEMENTATION/VERIFICATION；DEC.md）| 已批准并实现；当前按负责人要求 JEV_ENABLED=false 关闭 |
+| Decision | Jev 决策预筛层是否接入（TypeSafe System One 模型） | `docs/vibe/releases/v1/`（SPEC REQ-04 + VERIFICATION；决策见 `docs/vibe/decisions/DEC-002-jev-prefilter.md`）| 已批准并实现；当前按负责人要求 JEV_ENABLED=false 关闭 |
 | Decision | JEV_API_KEY 已暴露于对话，建议轮换 | 安全 | 用户（验证完成后轮换） |
 
 ## Debug Snapshot

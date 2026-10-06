@@ -23,8 +23,8 @@
 | Current Architecture | `docs/vibe/TECH_DESIGN.md` | 已核验 |
 | Current Progress | `docs/vibe/PROGRESS.md` | 已核验 |
 | Product Baseline | `docs/REQUIREMENTS.md` | 基线存在，未冻结 |
-| Feature Docs | `docs/vibe/features/<feature>/`（REQUIREMENT/DESIGN/IMPLEMENTATION/VERIFICATION） | 已建立 |
-| Decisions | `docs/vibe/features/*/DEC.md` | DEC-001 / DEC-002 |
+| Current Release | `docs/vibe/releases/v1/`（PROJECT_BRIEF/SPEC/CHANGE/PROPOSED_DESIGN/IMPLEMENTATION_PLAN/VERIFICATION） | 已建立（v1） |
+| Decisions | `docs/vibe/decisions/`（DEC-001/DEC-002） | 已记录 |
 | Bugs | `docs/vibe/bugs/` | 缺失（记录于 PROGRESS 风险表） |
 
 ## Supported Commands
