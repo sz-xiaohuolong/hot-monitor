@@ -57,6 +57,22 @@ export interface Stats {
   bySource: Record<string, number>;
 }
 
+/**
+ * 带上 HTTP 状态码的错误。原先 request() 把 status 丢掉了，
+ * 调用方无法区分 409（已在跑）和 500（真出错）—— 前者不该弹错误提示。
+ */
+export class ApiError extends Error {
+  status: number;
+  body: any;
+
+  constructor(status: number, body: any) {
+    super(body?.message || body?.error || 'Request failed');
+    this.name = 'ApiError';
+    this.status = status;
+    this.body = body;
+  }
+}
+
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(`${API_BASE}${endpoint}`, {
     headers: {
@@ -68,7 +84,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Request failed' }));
-    throw new Error(error.error || 'Request failed');
+    throw new ApiError(response.status, error);
   }
 
   if (response.status === 204) {
@@ -181,6 +197,65 @@ export const settingsApi = {
     })
 };
 
-// Manual trigger
-export const triggerHotspotCheck = () => 
-  request<{ message: string }>('/check-hotspots', { method: 'POST' });
+// Scan API
+export interface ScanProgress {
+  keywordIndex: number;
+  keywordTotal: number;
+  currentKeyword: string | null;
+  newHotspots: number;
+}
+
+export type ScanTerminalStatus = 'completed' | 'cancelled' | 'failed';
+
+export interface LastRunSnapshot {
+  runId: string;
+  trigger: 'manual' | 'cron';
+  status: ScanTerminalStatus;
+  newHotspots: number;
+  startedAt: string;
+  finishedAt: string;
+  durationMs: number;
+  error?: string;
+}
+
+export interface ScanSnapshot {
+  isRunning: boolean;
+  cancelRequested: boolean;
+  runId: string | null;
+  trigger: 'manual' | 'cron' | null;
+  startedAt: string | null;
+  progress: ScanProgress | null;
+  lastRun: LastRunSnapshot | null;
+}
+
+/** 单个信源的本轮抓取健康度 */
+export interface SourceHealth {
+  name: string;
+  ok: boolean;
+  items: number;
+  error: string | null;
+  durationMs: number;
+}
+
+export interface SourceHealthResponse {
+  checkedAt: string | null;
+  failed: string[];
+  sources: SourceHealth[];
+}
+
+export const scanApi = {
+  getStatus: () => request<ScanSnapshot>('/scan/status'),
+
+  /** 本轮信源健康度：用于区分「今天没热点」与「信源挂了」 */
+  getHealth: () => request<SourceHealthResponse>('/scan/health'),
+
+  /** 已在跑时抛 ApiError(status=409)，其 body.scan 是当前快照 —— 据此同步而非报错 */
+  start: () =>
+    request<{ message: string; scan: ScanSnapshot }>('/scan', { method: 'POST' }),
+
+  cancel: () =>
+    request<{ message: string; cancelRequested: boolean; scan: ScanSnapshot }>(
+      '/scan/cancel',
+      { method: 'POST' }
+    )
+};

@@ -87,6 +87,68 @@ Detailed information about each data source, including endpoints, rate limits, p
 - **Quality filter thresholds**: likes ≥ 10, retweets ≥ 5, views ≥ 500, followers ≥ 100 (halved for blue-verified users)
 - **Pagination**: Response includes `has_next_page` and `next_cursor`
 
+## New Sources (2026-10, server implementation only)
+
+Implemented in `server/src/services/newSources.ts` + `newSourcesAggregator.ts`.
+These sources **throw on failure** instead of returning `[]` — the health ledger
+(`server/src/services/sourceHealth.ts`) records per-source ok/error per scan and is
+exposed at `GET /api/scan/health`.
+
+### Juejin (掘金推荐流)
+
+- **Method**: Public JSON API (no API key)
+- **URL**: `POST https://api.juejin.cn/recommend_api/v1/article/recommend_all_feed`
+- **Body**: `{"id_type":2,"client_type":2608,"sort_type":200,"cursor":"0","limit":30}`
+- **Parsing**: `data[].item_info.article_info` → `title`, `brief_content`, `ctime` (**seconds**, ×1000),
+  `view_count`, `digg_count`; `author_user_info.user_name`; article URL = `https://juejin.cn/post/{article_id}`
+- **Quirks**: No keyword search endpoint — pulls recommendation feed then filters locally by keyword.
+  `err_no !== 0` is treated as failure (throws).
+
+### CSDN
+
+- **Method**: Public JSON API (no API key)
+- **URL**: `https://so.csdn.net/api/v3/search?q={query}&t=blog&p=1&s=0&tm=0`
+- **Parsing**: `result_vos[]` → `title`/`description` (contain `<em>` highlight tags — strip),
+  `url` (strip tracking query params), `create_time` (**milliseconds**), `view_num`, `digg`, `author`
+
+### OSChina (开源中国资讯)
+
+- **Method**: HTML scraping (no API key)
+- **URL**: `https://www.oschina.net/news`
+- **Parsing**: `#newsList .news-item` → url from `data-url` attribute (NOT href),
+  title from `.title`, description from `.description .line-clamp`
+- **Quirks**: `.news-item` also matches author rows elsewhere on the page — scope to `#newsList`.
+  Filtered by keyword locally.
+
+### GitHub (仓库搜索)
+
+- **Method**: Official JSON API (60 req/h anonymous, higher with token)
+- **URL**: `https://api.github.com/search/repositories?q={query}&sort=stars&order=desc&per_page=15`
+- **Auth**: optional `GITHUB_TOKEN` env var → `Authorization: Bearer`
+- **Parsing**: `items[]` → `full_name`, `html_url`, `description`, `stargazers_count`,
+  `forks_count`, `pushed_at`, `owner.login`
+- **Quirks**: Rate-limit/auth errors come back as HTTP 200 with `message` field and no `items`
+  — must throw on that shape instead of treating as empty.
+
+### Product Hunt
+
+- **Method**: Official RSS feed — **Atom format** (`<entry>`, not `<item>`)
+- **URL**: `https://www.producthunt.com/feed`
+- **Parsing**: split on `<entry>`; link is in `<link rel="alternate" href="...">` attribute;
+  content is **HTML-entity-encoded** (`&lt;p&gt;`) — decode entities *before* stripping tags;
+  dates in `<published>` (RFC3339)
+- **Quirks**: No keyword search — pulls 50 entries then filters locally.
+
+### 微信公众号（搜狗微信）
+
+- **Method**: HTML scraping (no API key)
+- **URL**: `https://weixin.sogou.com/weixin?type=2&query={query}`
+- **Parsing**: `li[id^="sogou_vr"]` → title from `h3 a`, snippet from `.txt-info`,
+  relative `/link?url=` hrefs need `https://weixin.sogou.com` prefix,
+  timestamp hidden in `document.write(timeConvert('{unix_seconds}'))` inside `.s-p`
+- **Quirks**: The `/link` URLs carry an expiring token — fine for per-scan use, not durable links.
+  May hit captcha under heavy use.
+
 ## Rate Limiting Strategy
 
 All sources implement per-source rate limiting via minimum interval enforcement:

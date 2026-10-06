@@ -7,14 +7,17 @@
  * 运行方式：
  *   npx vitest run src/__tests__/aiRelevance.test.ts
  * 
- * 注意：需要配置 OPENROUTER_API_KEY 环境变量才能调用真实 AI。
+ * 注意：需要配置 AI 服务密钥（通用变量 AI_API_KEY，或当前 provider 对应的
+ * ARK_API_KEY / OPENROUTER_API_KEY）才能调用真实 AI。
  * 如果未配置，测试会跳过（不会失败）。
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import { analyzeContent, expandKeyword, preMatchKeyword } from '../services/ai.js';
+import { resolveProviderConfig } from '../services/aiProvider.js';
 
-const HAS_API_KEY = !!process.env.OPENROUTER_API_KEY;
+/** 当前 provider 是否已配置可用的 API Key */
+const HAS_API_KEY = !!resolveProviderConfig().apiKey;
 
 // ========== 测试用例定义 ==========
 
@@ -249,38 +252,50 @@ describe.skipIf(!HAS_API_KEY)('AI 相关性判断准确度（真实 AI 调用）
 // ========== 无 API 时的 fallback 行为测试 ==========
 
 describe('AI Fallback 行为（无 API Key）', () => {
+  /** 清空所有可能的密钥来源，返回恢复函数 */
+  function clearApiKeys(): () => void {
+    const keys = ['AI_API_KEY', 'ARK_API_KEY', 'OPENROUTER_API_KEY'] as const;
+    const saved = keys.map(k => [k, process.env[k]] as const);
+    keys.forEach(k => {
+      process.env[k] = '';
+    });
+    return () => {
+      saved.forEach(([k, v]) => {
+        if (v === undefined) delete process.env[k];
+        else process.env[k] = v;
+      });
+    };
+  }
+
   it('preMatch=true 时 fallback 给出较高默认分', async () => {
-    // 临时清空 API key 测试 fallback
-    const originalKey = process.env.OPENROUTER_API_KEY;
-    process.env.OPENROUTER_API_KEY = '';
-    
+    const restore = clearApiKeys();
+
     try {
       const result = await analyzeContent(
         'Claude Sonnet 4.6 is amazing',
         'Claude Sonnet 4.6',
         { matched: true, matchedTerms: ['Claude Sonnet 4.6'] }
       );
-      expect(result.relevance).toBe(50);
+      expect(result.relevance).toBe(30);
       expect(result.keywordMentioned).toBe(true);
     } finally {
-      process.env.OPENROUTER_API_KEY = originalKey || '';
+      restore();
     }
   });
 
   it('preMatch=false 时 fallback 给出较低默认分', async () => {
-    const originalKey = process.env.OPENROUTER_API_KEY;
-    process.env.OPENROUTER_API_KEY = '';
-    
+    const restore = clearApiKeys();
+
     try {
       const result = await analyzeContent(
         '今天天气真好',
         'Claude Sonnet 4.6',
         { matched: false, matchedTerms: [] }
       );
-      expect(result.relevance).toBe(20);
+      expect(result.relevance).toBe(10);
       expect(result.keywordMentioned).toBe(false);
     } finally {
-      process.env.OPENROUTER_API_KEY = originalKey || '';
+      restore();
     }
   });
 });

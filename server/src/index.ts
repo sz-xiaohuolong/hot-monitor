@@ -10,7 +10,9 @@ import keywordsRouter from './routes/keywords.js';
 import hotspotsRouter from './routes/hotspots.js';
 import settingsRouter from './routes/settings.js';
 import notificationsRouter from './routes/notifications.js';
-import { runHotspotCheck } from './jobs/hotspotChecker.js';
+import { createScanRouter, startScan } from './routes/scan.js';
+import { executeScan } from './jobs/hotspotChecker.js';
+import { tryStartScan } from './jobs/scanManager.js';
 
 dotenv.config();
 
@@ -32,21 +34,15 @@ app.use('/api/keywords', keywordsRouter);
 app.use('/api/hotspots', hotspotsRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/notifications', notificationsRouter);
+app.use('/api/scan', createScanRouter(io));
 
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Manual trigger for hotspot check
-app.post('/api/check-hotspots', async (req, res) => {
-  try {
-    await runHotspotCheck(io);
-    res.json({ message: 'Hotspot check completed' });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to run hotspot check' });
-  }
-});
+// 旧路径，语义与 POST /api/scan 完全一致（202 启动 / 409 已在跑）
+app.post('/api/check-hotspots', startScan(io));
 
 // WebSocket connection handling
 io.on('connection', (socket) => {
@@ -66,14 +62,15 @@ io.on('connection', (socket) => {
   });
 });
 
-// Scheduled job: Run hotspot check every 30 minutes
-cron.schedule('*/30 * * * *', async () => {
+// Scheduled job: Run hotspot check every 2 hours
+// 频率同时体现在 client/src/App.tsx 的展示文案与 docs 说明中，调整时需三处同步。
+cron.schedule('0 */2 * * *', () => {
   console.log('🔄 Running scheduled hotspot check...');
-  try {
-    await runHotspotCheck(io);
-    console.log('✅ Scheduled hotspot check completed');
-  } catch (error) {
-    console.error('❌ Scheduled hotspot check failed:', error);
+  // 撞上运行中的扫描就跳过，不排队 —— 排队会在长扫描结束后立刻再打一轮外部 API。
+  // tryStartScan 是同步返回的，异常已在内部收口，所以这里不需要 try/catch。
+  const { started } = tryStartScan(io, 'cron', (ctx) => executeScan(ctx, io));
+  if (!started) {
+    console.warn('⏭ 定时扫描跳过：已有扫描在进行中');
   }
 });
 
@@ -87,7 +84,7 @@ httpServer.listen(PORT, () => {
   🔥 热点监控服务启动成功!
   📡 Server running on http://localhost:${PORT}
   🔌 WebSocket ready
-  ⏰ Hotspot check scheduled every 30 minutes
+  ⏰ Hotspot check scheduled every 2 hours
   `);
 });
 

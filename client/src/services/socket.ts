@@ -66,6 +66,68 @@ export function onNotification(callback: (notification: NotificationEvent) => vo
   return () => s.off('notification', callback);
 }
 
+// ── 扫描生命周期事件 ──────────────────────────────────────────────
+// 全部带 runId，前端据此丢弃过期事件（例如停止后旧 run 迟到的事件）。
+
+export interface ScanStartedEvent {
+  runId: string;
+  trigger: 'manual' | 'cron';
+  startedAt: string;
+}
+
+export interface ScanProgressEvent {
+  runId: string;
+  keywordIndex: number;
+  keywordTotal: number;
+  currentKeyword: string | null;
+  newHotspots: number;
+}
+
+export interface ScanCancellingEvent {
+  runId: string;
+}
+
+/** 唯一的终态事件。completed / cancelled / failed 都走这里，靠 status 区分。 */
+export interface ScanCompletedEvent {
+  runId: string;
+  status: 'completed' | 'cancelled' | 'failed';
+  newHotspots: number;
+  startedAt: string;
+  finishedAt: string;
+  durationMs: number;
+}
+
+export function onScanStarted(callback: (e: ScanStartedEvent) => void): () => void {
+  const s = getSocket();
+  s.on('scan:started', callback);
+  return () => s.off('scan:started', callback);
+}
+
+export function onScanProgress(callback: (e: ScanProgressEvent) => void): () => void {
+  const s = getSocket();
+  s.on('scan:progress', callback);
+  return () => s.off('scan:progress', callback);
+}
+
+export function onScanCancelling(callback: (e: ScanCancellingEvent) => void): () => void {
+  const s = getSocket();
+  s.on('scan:cancelling', callback);
+  return () => s.off('scan:cancelling', callback);
+}
+
+export function onScanCompleted(callback: (e: ScanCompletedEvent) => void): () => void {
+  const s = getSocket();
+  s.on('scan:completed', callback);
+  return () => s.off('scan:completed', callback);
+}
+
+/** 重连后需要重新拉一次扫描状态，否则断线期间错过的终态事件会让按钮永远卡在"扫描中"。 */
+export function onSocketConnect(callback: () => void): () => void {
+  const s = getSocket();
+  s.on('connect', callback);
+  return () => s.off('connect', callback);
+}
+
 export function disconnectSocket(): void {
   if (socket) {
     socket.disconnect();

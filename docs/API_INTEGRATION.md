@@ -444,8 +444,8 @@ export default router;
 ```typescript
 import cron from 'node-cron';
 
-// 每 30 分钟执行一次热点检查
-cron.schedule('*/30 * * * *', async () => {
+// 每 2 小时执行一次热点检查
+cron.schedule('0 */2 * * *', async () => {
   console.log('Running hotspot check...');
   await checkHotspots();
 });

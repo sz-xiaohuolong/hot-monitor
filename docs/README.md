@@ -18,7 +18,7 @@
 - 第一时间发送通知
 
 ### 2. 热点收集
-- 每 30 分钟自动收集指定范围内的热点
+- 每 2 小时自动收集指定范围内的热点
 - 多数据源聚合，确保信息全面
 - AI 分析热点价值和可信度
 
@@ -83,8 +83,15 @@ yupi-hot-monitor/
 ## ⚙️ 配置说明
 
 ```env
-# OpenRouter AI
+# AI 服务：openrouter | ark（不配置默认 openrouter，两者均使用 OpenAI 兼容协议）
+AI_PROVIDER=openrouter
+
+# OpenRouter（AI_PROVIDER=openrouter 时使用）
 OPENROUTER_API_KEY=your_openrouter_key
+
+# 火山方舟 Ark（AI_PROVIDER=ark 时使用）
+# ARK_API_KEY=your_ark_key
+# ARK_MODEL=doubao-seed-1-6
 
 # Twitter API (twitterapi.io)
 TWITTER_API_KEY=your_twitter_api_key
@@ -97,7 +104,8 @@ SMTP_PASS=your_password
 NOTIFY_EMAIL=receive@example.com
 
 # 监控配置
-MONITOR_INTERVAL=1800000  # 30分钟 (毫秒)
+# 扫描周期目前为代码内固定值：server/src/index.ts 的 cron 表达式 `0 */2 * * *`（每 2 小时）
+# 暂不支持通过环境变量调整；如需修改请改上述表达式，并同步 client/src/App.tsx 的展示文案。
 ```
 
 ## 🚀 快速开始

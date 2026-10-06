@@ -1,5 +1,9 @@
 node_modules
+dist
 # Keep environment variables out of version control
+# .env* 一并覆盖 .env.bak / .env.local 这类副本 —— 它们同样装着真实密钥
 .env
+.env.*
+!.env.example
 
 /generated/prisma

@@ -1,9 +1,32 @@
-import { OpenRouter } from '@openrouter/sdk';
 import type { AIAnalysis } from '../types.js';
+import { requireProviderConfig, ApiKeyMissingError } from './aiProvider.js';
+import { chatCompletion, extractMessageContent } from './openaiCompatibleClient.js';
+import {
+  requireJevConfig,
+  resolveJevConfig,
+  requestJevDecisions,
+  noulValue,
+  scoreValue,
+  type JevQuestions
+} from './jevClient.js';
 
-const openRouter = new OpenRouter({
-  apiKey: process.env.OPENROUTER_API_KEY ?? ''
-});
+/**
+ * 调用一次 AI 补全，provider 与模型均由配置决定（见 aiProvider.ts）。
+ * 未配置 API Key 时抛出 ApiKeyMissingError，调用方据此走规则化 fallback。
+ */
+async function requestCompletion(
+  messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>,
+  params: { temperature: number; maxTokens: number }
+): Promise<string> {
+  const config = requireProviderConfig();
+  const response = await chatCompletion(config, {
+    model: config.model,
+    messages,
+    temperature: params.temperature,
+    maxTokens: params.maxTokens
+  });
+  return extractMessageContent(response);
+}
 
 // ========== Query Expansion（查询扩展） ==========
 
@@ -23,16 +46,9 @@ export async function expandKeyword(keyword: string): Promise<string[]> {
   // 不管 AI 是否可用，先提取基础核心词
   const coreTerms = extractCoreTerms(keyword);
 
-  if (!process.env.OPENROUTER_API_KEY) {
-    const result = [keyword, ...coreTerms];
-    expansionCache.set(keyword, result);
-    return result;
-  }
-
   try {
-    const result = await openRouter.chat.send({
-      model: 'deepseek/deepseek-v3.2',
-      messages: [
+    const responseContent = await requestCompletion(
+      [
         {
           role: 'system',
           content: `你是一个搜索查询扩展专家。给定一个监控关键词，生成该关键词的变体和相关检索词，用于文本匹配。
@@ -53,12 +69,9 @@ export async function expandKeyword(keyword: string): Promise<string[]> {
           content: keyword
         }
       ],
-      temperature: 0.2,
-      maxTokens: 300
-    });
+      { temperature: 0.2, maxTokens: 300 }
+    );
 
-    const rawContent = result.choices[0]?.message?.content || '';
-    const responseContent = typeof rawContent === 'string' ? rawContent : JSON.stringify(rawContent);
     const jsonMatch = responseContent.match(/\[[\s\S]*\]/);
     if (jsonMatch) {
       const parsed: string[] = JSON.parse(jsonMatch[0]);
@@ -69,7 +82,10 @@ export async function expandKeyword(keyword: string): Promise<string[]> {
       return expanded;
     }
   } catch (error) {
-    console.error('Query expansion failed:', error);
+    // 未配置 API Key 属于预期情况，降级为规则化扩展，不当作错误上报
+    if (!(error instanceof ApiKeyMissingError)) {
+      console.error('Query expansion failed:', error);
+    }
   }
 
   // Fallback：使用基础核心词
@@ -113,6 +129,74 @@ export function preMatchKeyword(text: string, expandedKeywords: string[]): { mat
   return { matched: matchedTerms.length > 0, matchedTerms };
 }
 
+// ========== Jev 决策预筛（System One 模型） ==========
+
+/**
+ * Jev 粗筛阈值（经真实调用调优，2026-10-05）：
+ * - isRealNoul < JEV_ISREAL_REJECT：明确垃圾（营销软文 0.03、标题党 0.20）
+ * - relevanceScore === 0：完全无关
+ *
+ * 注意：Jev 对真实内容的 isReal 判定不稳定（实测真实新闻 0.22~0.69），
+ * 所以 Jev 只用于拦截"明确垃圾"，不做最终决策 —— 幸存者仍走 LLM 全量精判。
+ */
+export const JEV_ISREAL_REJECT = 0.15;
+export const JEV_RELEVANCE_REJECT_LEVEL = 0; // score 0 = 完全无关
+
+/**
+ * 组装 Jev 的 typed questions（只问粗筛所需的两个维度，减少 token）。
+ */
+function buildJevQuestions(keyword: string): JevQuestions {
+  return {
+    isReal: {
+      type: 'noul',
+      instructions: '这段内容是否为真实有价值的信息（排除标题党、假新闻、营销软文）？',
+      criteria: { true: '真实有价值', false: '标题党/假新闻/营销软文' }
+    },
+    relevance: {
+      type: 'score',
+      instructions: `内容与监控关键词【${keyword}】的直接相关程度`,
+      criteria: ['完全无关', '弱相关', '直接相关', '核心主题']
+    }
+  };
+}
+
+export interface JevPrefilterResult {
+  /** Jev 原始 noul 概率（0~1） */
+  isRealNoul: number;
+  /** Jev 原始 score（0..levels-1） */
+  relevanceScore: number;
+  /** 是否被 Jev 明确拦截（垃圾/完全无关） */
+  rejected: boolean;
+  /** 被拦截的原因 */
+  rejectReason: string | null;
+}
+
+/**
+ * Jev 粗筛阶段。仅在启用 JEV_ENABLED 且有密钥时尝试。
+ * 任何失败（未启用、缺 key、网络、解析）都抛错 → 由调用方降级到 LLM 全量。
+ */
+async function runJevPrefilter(content: string, keyword: string): Promise<JevPrefilterResult> {
+  const config = requireJevConfig();
+  const state = content.slice(0, 2000);
+
+  const response = await requestJevDecisions(config, state, buildJevQuestions(keyword));
+
+  const isRealNoul = noulValue(response, 'isReal');
+  const relevanceScore = scoreValue(response, 'relevance');
+
+  let rejected = false;
+  let rejectReason: string | null = null;
+  if (isRealNoul < JEV_ISREAL_REJECT) {
+    rejected = true;
+    rejectReason = `Jev 判定疑似垃圾（isReal=${isRealNoul.toFixed(2)} < ${JEV_ISREAL_REJECT}）`;
+  } else if (relevanceScore <= JEV_RELEVANCE_REJECT_LEVEL) {
+    rejected = true;
+    rejectReason = 'Jev 判定与关键词完全无关（score=0）';
+  }
+
+  return { isRealNoul, relevanceScore, rejected, rejectReason };
+}
+
 // ========== AI 内容分析（关键词感知） ==========
 
 function buildAnalysisPrompt(keyword: string, preMatchResult: { matched: boolean; matchedTerms: string[] }): string {
@@ -148,28 +232,44 @@ ${matchHint}
 只输出 JSON，不要有其他内容。`;
 }
 
+/**
+ * Jev 粗筛只拦截明确垃圾，幸存者由 LLM 全量精判（见 analyzeContent）。
+ */
+
 export async function analyzeContent(content: string, keyword: string, preMatchResult?: { matched: boolean; matchedTerms: string[] }): Promise<AIAnalysis> {
   // 默认预匹配结果
   const matchResult = preMatchResult ?? { matched: false, matchedTerms: [] };
 
-  if (!process.env.OPENROUTER_API_KEY) {
-    console.warn('OpenRouter API key not configured, using fallback analysis');
-    return {
-      isReal: true,
-      relevance: matchResult.matched ? 50 : 20,
-      relevanceReason: '未配置 AI 服务，使用默认分数',
-      keywordMentioned: matchResult.matched,
-      importance: 'low',
-      summary: content.slice(0, 50) + '...'
-    };
+  // ===== 阶段 1：Jev 保守粗筛（可选，默认关闭） =====
+  // 只拦截"明确垃圾/完全无关"（阈值经真实调用调优），
+  // 不替代 LLM 的最终决策 —— 任何 Jev 失败都降级到 LLM 全量，行为与现状一致。
+  if (resolveJevConfig().enabled) {
+    try {
+      const prefilter = await runJevPrefilter(content, keyword);
+      if (prefilter.rejected) {
+        // 明确垃圾：零 LLM 成本直接返回低分（会被调用方过滤）
+        console.log(`  ⚡ Jev 拦截 [${keyword}]: ${prefilter.rejectReason} (relevance=${prefilter.relevanceScore})`);
+        return {
+          isReal: false,
+          relevance: prefilter.relevanceScore > 0 ? 10 : 0,
+          relevanceReason: prefilter.rejectReason ?? 'Jev 预筛拦截',
+          keywordMentioned: false,
+          importance: 'low',
+          summary: ''
+        };
+      }
+      // 幸存者：继续走 LLM 全量精判（保持与现状一致的决策质量）
+    } catch (error) {
+      console.warn('Jev prefilter failed, falling back to LLM full analysis:', error instanceof Error ? error.message : error);
+    }
   }
 
+  // ===== 阶段 2：LLM 全量分析（现状路径，Jev 未启用/幸存者/降级） =====
   try {
     const prompt = buildAnalysisPrompt(keyword, matchResult);
 
-    const result = await openRouter.chat.send({
-      model: 'deepseek/deepseek-v3.2',
-      messages: [
+    const responseContent = await requestCompletion(
+      [
         {
           role: 'system',
           content: prompt
@@ -179,13 +279,9 @@ export async function analyzeContent(content: string, keyword: string, preMatchR
           content: content.slice(0, 2000) // 限制内容长度
         }
       ],
-      temperature: 0.2, // 降低温度，提高判断一致性
-      maxTokens: 500
-    });
+      { temperature: 0.2, maxTokens: 500 } // 降低温度，提高判断一致性
+    );
 
-    const rawContent = result.choices[0]?.message?.content || '';
-    const responseContent = typeof rawContent === 'string' ? rawContent : JSON.stringify(rawContent);
-    
     // 尝试解析 JSON
     const jsonMatch = responseContent.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
@@ -204,7 +300,12 @@ export async function analyzeContent(content: string, keyword: string, preMatchR
 
     throw new Error('Failed to parse AI response');
   } catch (error) {
-    console.error('AI analysis failed:', error);
+    // 未配置 API Key：走与「AI 不可用」一致的降级路径
+    if (error instanceof ApiKeyMissingError) {
+      console.warn(error.message);
+    } else {
+      console.error('AI analysis failed:', error);
+    }
     // Fallback
     return {
       isReal: true,

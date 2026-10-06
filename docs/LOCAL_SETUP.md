@@ -29,9 +29,11 @@ cd yupi-hot-monitor
 
 ## 第二步：获取 API Key
 
-项目需要 **1 个必需的 API Key**，另外 2 个为可选。
+项目需要 **1 个必需的 API Key**（AI 服务），另外 2 个为可选。
 
-### ✅ 必需：OpenRouter API Key
+AI 服务支持在两个 OpenAI 兼容的服务之间通过配置文件切换，任选其一即可：
+
+### ✅ 必需（二选一）：OpenRouter API Key
 
 OpenRouter 是一个统一的 AI 大模型接入平台，注册即可使用。
 
@@ -41,6 +43,29 @@ OpenRouter 是一个统一的 AI 大模型接入平台，注册即可使用。
 4. 确保账户有一定额度（新用户通常有免费额度）
 
 > 💡 如果账户没有额度，需要在 [Credits 页面](https://openrouter.ai/settings/credits) 充值少量金额（几美元即可用很久）。
+
+### ✅ 必需（二选一）：火山方舟 Ark API Key
+
+火山方舟（Volcengine Ark）提供 OpenAI 兼容接口，国内访问更稳定。
+
+1. 打开 [火山方舟控制台](https://console.volcengine.com/ark)，开通模型服务
+2. 在 **API Key 管理** 中创建 API Key
+3. 记下要使用的模型名（如 `doubao-seed-1-6-250615`）或推理接入点 ID（如 `ep-2025xxxx-xxxxx`）
+
+> ⚠️ 方舟的模型名与 OpenRouter 不同，必须通过 `ARK_MODEL` 指定，否则请求会因模型不存在而失败。
+
+切换方式（在 `.env` 中修改，重启服务生效）：
+
+```env
+# 使用 OpenRouter
+AI_PROVIDER=openrouter
+OPENROUTER_API_KEY=sk-or-v1-你的key
+
+# 或使用火山方舟
+AI_PROVIDER=ark
+ARK_API_KEY=你的方舟key
+ARK_MODEL=doubao-seed-1-6-250615
+```
 
 ### 🔧 可选：Twitter API Key
 
@@ -79,8 +104,15 @@ DATABASE_URL="file:./dev.db"
 PORT=3001
 CLIENT_URL=http://localhost:5173
 
-# ✅ 必填：OpenRouter AI
+# ✅ 必填：AI 服务（在 openrouter 与 ark 之间选择）
+AI_PROVIDER=openrouter
+
+# 选择 OpenRouter 时填这里
 OPENROUTER_API_KEY=sk-or-v1-你的key粘贴到这里
+
+# 选择火山方舟时改用下面两行（同时把 AI_PROVIDER 改为 ark）
+# ARK_API_KEY=你的方舟key
+# ARK_MODEL=doubao-seed-1-6-250615
 
 # 🔧 选填：Twitter API（不填则不抓取 Twitter 数据）
 TWITTER_API_KEY=你的twitter_api_key
@@ -155,7 +187,7 @@ npm run dev
 🔥 热点监控服务启动成功!
 📡 Server running on http://localhost:3001
 🔌 WebSocket ready
-⏰ Hotspot check scheduled every 30 minutes
+⏰ Hotspot check scheduled every 2 hours
 ```
 
 **终端 2 — 启动前端：**

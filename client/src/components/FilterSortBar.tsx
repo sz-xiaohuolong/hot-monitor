@@ -1,9 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  ArrowUpDown, Filter, X, Clock, Flame, TrendingUp, Target,
-  ChevronDown, Check, RotateCcw
-} from 'lucide-react';
+import { Filter, X, ChevronDown, Check, RotateCcw } from 'lucide-react';
 import { cn } from '../lib/utils';
 import type { Keyword } from '../services/api';
 
@@ -34,31 +31,36 @@ interface FilterSortBarProps {
 }
 
 const SORT_OPTIONS = [
-  { value: 'createdAt', label: '最新发现', icon: Clock },
-  { value: 'publishedAt', label: '最新发布', icon: Clock },
-  { value: 'importance', label: '重要程度', icon: Flame },
-  { value: 'relevance', label: '相关性', icon: Target },
-  { value: 'hot', label: '热度综合', icon: TrendingUp },
+  { value: 'createdAt', label: '最新发现' },
+  { value: 'publishedAt', label: '最新发布' },
+  { value: 'importance', label: '重要程度' },
+  { value: 'relevance', label: '相关性' },
+  { value: 'hot', label: '热度综合' },
 ];
 
 const SOURCE_OPTIONS = [
   { value: '', label: '全部来源' },
   { value: 'twitter', label: 'Twitter' },
   { value: 'bing', label: 'Bing' },
-  { value: 'google', label: 'Google' },
   { value: 'sogou', label: '搜狗' },
   { value: 'bilibili', label: 'Bilibili' },
   { value: 'weibo', label: '微博热搜' },
+  { value: 'juejin', label: '掘金' },
+  { value: 'csdn', label: 'CSDN' },
+  { value: 'oschina', label: '开源中国' },
+  { value: 'weixin', label: '微信公众号' },
   { value: 'hackernews', label: 'HackerNews' },
-  { value: 'duckduckgo', label: 'DuckDuckGo' },
+  { value: 'github', label: 'GitHub' },
+  { value: 'producthunt', label: 'Product Hunt' },
 ];
 
+// 小圆点与列表里的重要度标记保持一致；只有最高两级上色
 const IMPORTANCE_OPTIONS = [
   { value: '', label: '全部等级' },
-  { value: 'urgent', label: '🔴 紧急', color: 'text-red-400' },
-  { value: 'high', label: '🟠 高', color: 'text-orange-400' },
-  { value: 'medium', label: '🟡 中', color: 'text-amber-400' },
-  { value: 'low', label: '🟢 低', color: 'text-emerald-400' },
+  { value: 'urgent', label: '紧急', dot: 'bg-danger' },
+  { value: 'high', label: '重要', dot: 'bg-warn' },
+  { value: 'medium', label: '一般', dot: 'bg-dot-medium' },
+  { value: 'low', label: '低', dot: 'bg-dot-low' },
 ];
 
 const TIME_RANGE_OPTIONS = [
@@ -71,20 +73,20 @@ const TIME_RANGE_OPTIONS = [
 
 const REAL_OPTIONS = [
   { value: '', label: '全部' },
-  { value: 'true', label: '✅ 真实' },
-  { value: 'false', label: '⚠️ 疑似虚假' },
+  { value: 'true', label: '真实' },
+  { value: 'false', label: '疑似虚假' },
 ];
 
 // Dropdown component
-function Dropdown({ 
-  label, 
-  value, 
-  options, 
-  onChange 
-}: { 
-  label: string; 
-  value: string; 
-  options: { value: string; label: string; color?: string }[];
+function Dropdown({
+  label,
+  value,
+  options,
+  onChange
+}: {
+  label: string;
+  value: string;
+  options: { value: string; label: string; dot?: string }[];
   onChange: (v: string) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -96,10 +98,10 @@ function Dropdown({
       <button
         onClick={() => setOpen(!open)}
         className={cn(
-          "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap",
+          "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-caption font-medium transition-colors whitespace-nowrap border",
           isActive
-            ? "bg-blue-500/15 text-blue-400 border border-blue-500/30"
-            : "bg-white/5 text-slate-400 border border-white/10 hover:border-white/20 hover:text-slate-300"
+            ? "bg-accent-soft text-accent border-accent/25"
+            : "bg-surface text-ink-2 border-hairline hover:border-hairline-strong hover:text-ink"
         )}
       >
         <span>{isActive ? selected?.label : label}</span>
@@ -114,22 +116,23 @@ function Dropdown({
               initial={{ opacity: 0, y: 4, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 4, scale: 0.96 }}
-              transition={{ duration: 0.15 }}
-              className="absolute left-0 top-full mt-1 z-50 min-w-[160px] bg-[#0d0d20]/98 backdrop-blur-xl rounded-xl border border-white/10 shadow-2xl overflow-hidden"
+              transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+              className="absolute left-0 top-full mt-1.5 z-50 min-w-[160px] bg-surface backdrop-blur-xl rounded-xl border border-hairline shadow-[var(--shadow-pop)] overflow-hidden p-1"
             >
               {options.map((option) => (
                 <button
                   key={option.value}
                   onClick={() => { onChange(option.value); setOpen(false); }}
                   className={cn(
-                    "w-full flex items-center gap-2 px-3 py-2 text-xs transition-colors text-left",
+                    "w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-caption transition-colors text-left",
                     value === option.value
-                      ? "bg-blue-500/10 text-blue-400"
-                      : "text-slate-400 hover:bg-white/5 hover:text-white"
+                      ? "bg-accent-soft text-accent"
+                      : "text-ink-2 hover:bg-hover hover:text-ink"
                   )}
                 >
-                  {value === option.value && <Check className="w-3 h-3 shrink-0" />}
-                  <span className={cn(option.color)}>{option.label}</span>
+                  {option.dot && <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", option.dot)} />}
+                  <span>{option.label}</span>
+                  {value === option.value && <Check className="w-3 h-3 shrink-0 ml-auto" />}
                 </button>
               ))}
             </motion.div>
@@ -170,43 +173,34 @@ export default function FilterSortBar({ filters, onChange, keywords }: FilterSor
     <div className="space-y-3">
       {/* Main Bar: Sort + Filter Toggle */}
       <div className="flex items-center gap-2 flex-wrap">
-        {/* Sort Selector */}
-        <div className="flex items-center gap-1 bg-white/[0.03] rounded-xl border border-white/5 p-1">
-          <ArrowUpDown className="w-3.5 h-3.5 text-slate-600 ml-2" />
-          {SORT_OPTIONS.map((opt) => {
-            const Icon = opt.icon;
-            return (
-              <button
-                key={opt.value}
-                onClick={() => update('sortBy', opt.value)}
-                className={cn(
-                  "flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap",
-                  filters.sortBy === opt.value
-                    ? "bg-blue-500/15 text-blue-400 shadow-sm"
-                    : "text-slate-500 hover:text-slate-300"
-                )}
-              >
-                <Icon className="w-3 h-3" />
-                {opt.label}
-              </button>
-            );
-          })}
+        {/* Sort Selector — 分段控件 */}
+        <div className="segmented max-w-full overflow-x-auto">
+          {SORT_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => update('sortBy', opt.value)}
+              data-active={filters.sortBy === opt.value}
+              className="segmented-item"
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
 
         {/* Filter Toggle */}
         <button
           onClick={() => setShowFilters(!showFilters)}
           className={cn(
-            "flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all",
+            "flex items-center gap-1.5 px-3.5 py-2 rounded-full text-caption font-medium transition-colors border",
             showFilters || activeFilterCount > 0
-              ? "bg-blue-500/15 text-blue-400 border border-blue-500/30"
-              : "bg-white/5 text-slate-400 border border-white/10 hover:border-white/20"
+              ? "bg-accent-soft text-accent border-accent/25"
+              : "bg-surface text-ink-2 border-hairline hover:border-hairline-strong hover:text-ink"
           )}
         >
           <Filter className="w-3.5 h-3.5" />
           筛选
           {activeFilterCount > 0 && (
-            <span className="w-4 h-4 rounded-full bg-blue-500 text-[10px] text-white flex items-center justify-center font-bold">
+            <span className="min-w-[16px] h-4 px-1 rounded-full bg-accent text-[10px] text-white flex items-center justify-center font-semibold metric-num">
               {activeFilterCount}
             </span>
           )}
@@ -216,7 +210,7 @@ export default function FilterSortBar({ filters, onChange, keywords }: FilterSor
         {(activeFilterCount > 0 || hasNonDefaultSort) && (
           <button
             onClick={resetFilters}
-            className="flex items-center gap-1 px-2.5 py-2 rounded-xl text-xs text-slate-500 hover:text-slate-300 transition-colors"
+            className="flex items-center gap-1 px-2.5 py-2 rounded-full text-caption text-ink-2 hover:text-ink transition-colors"
           >
             <RotateCcw className="w-3 h-3" />
             重置
@@ -269,7 +263,7 @@ export default function FilterSortBar({ filters, onChange, keywords }: FilterSor
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
           >
-            <div className="flex items-center gap-2 flex-wrap p-3 rounded-xl bg-white/[0.02] border border-white/5">
+            <div className="flex items-center gap-2 flex-wrap p-3 rounded-[14px] bg-subtle border border-hairline">
               <Dropdown label="来源" value={filters.source} options={SOURCE_OPTIONS} onChange={(v) => update('source', v)} />
               <Dropdown label="重要程度" value={filters.importance} options={IMPORTANCE_OPTIONS} onChange={(v) => update('importance', v)} />
               <Dropdown label="关键词" value={filters.keywordId} options={keywordOptions} onChange={(v) => update('keywordId', v)} />
@@ -285,10 +279,10 @@ export default function FilterSortBar({ filters, onChange, keywords }: FilterSor
 
 function FilterTag({ label, onRemove }: { label: string; onRemove: () => void }) {
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-blue-500/10 text-blue-400 text-[10px] font-medium border border-blue-500/20">
+    <span className="inline-flex items-center gap-1 pl-2.5 pr-1.5 py-1 rounded-full bg-accent-soft text-accent text-caption font-medium">
       {label}
-      <button onClick={onRemove} className="hover:text-white transition-colors">
-        <X className="w-2.5 h-2.5" />
+      <button onClick={onRemove} aria-label={`移除筛选：${label}`} className="hover:opacity-60 transition-opacity">
+        <X className="w-3 h-3" />
       </button>
     </span>
   );

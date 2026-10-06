@@ -1,26 +1,101 @@
 @import "tailwindcss";
 
-/* ===== Design Tokens ===== */
+/* dark: 走 data-theme 属性而非系统偏好 —— 主题由用户显式选择 */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ===== Design Tokens =====
+   浅色是默认（Apple 体系），深色沿用原有配色。
+   两套主题共用同一套类名（bg-surface / text-ink / …），只换这里的变量值。 */
 :root {
-  --bg-base: #050510;
-  --bg-surface: #0a0a1a;
-  --bg-elevated: #111127;
-  --bg-hover: #16163a;
-  --border-subtle: rgba(59, 130, 246, 0.08);
-  --border-default: rgba(59, 130, 246, 0.15);
-  --border-active: rgba(59, 130, 246, 0.35);
-  --text-primary: #e8eaf0;
-  --text-secondary: #8b8fa8;
-  --text-muted: #5a5e78;
-  --accent-blue: #3b82f6;
-  --accent-cyan: #06b6d4;
-  --accent-emerald: #10b981;
-  --accent-amber: #f59e0b;
-  --accent-red: #ef4444;
+  --bg-page: #f5f5f7;
+  --bg-surface: #ffffff;
+  --bg-nav: rgba(255, 255, 255, 0.72);
+  --bg-subtle: #fafafc;
+  --bg-hover: rgba(0, 0, 0, 0.035);
+  --ink: #1d1d1f;
+  --ink-2: #6e6e73;
+  --ink-3: #86868b;
+  --hairline: rgba(0, 0, 0, 0.09);
+  --hairline-strong: rgba(0, 0, 0, 0.16);
+  --accent: #0071e3;
+  --accent-hover: #0077ed;
+  --accent-soft: rgba(0, 113, 227, 0.1);
+  --danger: #d70015;
+  --warn: #c93400;
+  --dot-medium: #6e6e73;
+  --dot-low: #aeaeb2;
+  --seg-track: rgba(0, 0, 0, 0.05);
+  --seg-thumb: #ffffff;
+  --seg-thumb-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.04);
+  --shadow-pop: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 0.5px rgba(0, 0, 0, 0.05);
+  color-scheme: light;
 }
 
-/* ===== Animations ===== */
+:root[data-theme="dark"] {
+  --bg-page: #050510;
+  --bg-surface: #0a0a1a;
+  --bg-nav: rgba(5, 5, 16, 0.72);
+  --bg-subtle: #111127;
+  --bg-hover: rgba(255, 255, 255, 0.05);
+  --ink: #e8eaf0;
+  --ink-2: #8b8fa8;
+  --ink-3: #5a5e78;
+  --hairline: rgba(255, 255, 255, 0.08);
+  --hairline-strong: rgba(255, 255, 255, 0.18);
+  --accent: #3b82f6;
+  --accent-hover: #60a5fa;
+  --accent-soft: rgba(59, 130, 246, 0.14);
+  --danger: #ef4444;
+  --warn: #f59e0b;
+  --dot-medium: #8b8fa8;
+  --dot-low: #5a5e78;
+  --seg-track: rgba(255, 255, 255, 0.05);
+  --seg-thumb: rgba(255, 255, 255, 0.14);
+  --seg-thumb-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-pop: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(255, 255, 255, 0.06);
+  color-scheme: dark;
+}
+
+/* ===== Tailwind 命名空间 =====
+   inline 是关键：工具类直接输出 var(--x)，主题切换才能实时生效。 */
 @theme inline {
+  --color-page: var(--bg-page);
+  --color-surface: var(--bg-surface);
+  --color-subtle: var(--bg-subtle);
+  --color-hover: var(--bg-hover);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-hairline: var(--hairline);
+  --color-hairline-strong: var(--hairline-strong);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-danger: var(--danger);
+  --color-warn: var(--warn);
+  --color-dot-medium: var(--dot-medium);
+  --color-dot-low: var(--dot-low);
+
+  /* Apple 的字号比例：正文 15px、标题字重 600、大字负字距 */
+  --text-hero: 40px;
+  --text-hero--line-height: 1.1;
+  --text-hero--letter-spacing: -0.02em;
+  --text-section: 24px;
+  --text-section--line-height: 1.2;
+  --text-section--letter-spacing: -0.01em;
+  --text-card: 17px;
+  --text-card--line-height: 1.4;
+  --text-card--letter-spacing: -0.01em;
+  --text-body: 15px;
+  --text-body--line-height: 1.47;
+  --text-caption: 12px;
+  --text-caption--line-height: 1.33;
+  --text-metric: 32px;
+  --text-metric--line-height: 1.1;
+  --text-metric--letter-spacing: -0.02em;
+
   --animate-spotlight: spotlight 2s ease 0.75s 1 forwards;
   --animate-meteor-effect: meteor 5s linear infinite;
   --animate-shimmer: shimmer 2s linear infinite;
@@ -58,22 +133,87 @@
 /* ===== Base ===== */
 * { box-sizing: border-box; }
 
+html {
+  background: var(--bg-page);
+}
+
 body {
   margin: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  background: var(--bg-base);
-  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue',
+    'PingFang SC', 'Hiragino Sans GB', sans-serif;
+  background: var(--bg-page);
+  color: var(--ink);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* ===== Scrollbar ===== */
-::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.15); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.3); }
+::-webkit-scrollbar-thumb { background: var(--hairline-strong); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--ink-3); }
+
+/* ===== 复用件 ===== */
+
+/* 卡片：靠白卡与灰底的对比，而不是重阴影 */
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--hairline);
+  border-radius: 18px;
+  box-shadow: var(--shadow-card);
+}
+
+/* 分段控件（macOS 样式）：轨道 + 白色滑块，不用下划线标签 */
+.segmented {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 10px;
+  background: var(--seg-track);
+  border: 1px solid var(--hairline);
+}
+.segmented-item {
+  padding: 6px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-2);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.segmented-item:hover { color: var(--ink); }
+.segmented-item[data-active="true"] {
+  background: var(--seg-thumb);
+  color: var(--ink);
+  box-shadow: var(--seg-thumb-shadow);
+}
+
+.metric-num { font-variant-numeric: tabular-nums; }
 
 /* ===== Line Clamp ===== */
 .line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
 .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.line-clamp-3 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+
+/* ===== Reduced Motion ===== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

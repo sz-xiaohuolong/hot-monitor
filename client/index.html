@@ -1,10 +1,22 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>client</title>
+    <title>HotPulse · AI 热点雷达</title>
+    <script>
+      // 首屏渲染前定好主题，避免刷新时闪一下另一种配色（FOUC）。
+      // 默认浅色：需求要的是 Apple light，跟随系统偏好会让深色系统下打开仍是深色。
+      (function () {
+        try {
+          var saved = localStorage.getItem('hotpulse-theme');
+          document.documentElement.dataset.theme = saved === 'dark' ? 'dark' : 'light';
+        } catch (e) {
+          document.documentElement.dataset.theme = 'light';
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
