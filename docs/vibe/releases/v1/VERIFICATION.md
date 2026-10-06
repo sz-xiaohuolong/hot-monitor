@@ -6,7 +6,7 @@
 - Effective SPEC: `SPEC.md`
 - Quality Profile: `Standard`
 - Verification Status: `VERIFIED`（REQ-01~05 全部 AC 有 fresh evidence；见矩阵）
-- Shipping Authorization: `GRANTED`（2026-10-05 项目负责人明确要求推送至 github.com/sz-xiaohuolong/hot-monter；但本文件只陈述验证事实，不代表后续版本自动获得授权）
+- Shipping Authorization: `GRANTED`（2026-10-05 项目负责人明确要求推送至 github.com/sz-xiaohuolong/hot-monitor；但本文件只陈述验证事实，不代表后续版本自动获得授权）
 - Verified At: 2026-10-05
 
 ## Requirement Evidence Matrix
@@ -70,7 +70,7 @@
 
 - Ready To Ship: `Yes`（基于证据）
 - Evidence-based Reason: 5 REQ / 14 AC 全部有 fresh evidence，自动化检查全绿，生产扫描端到端通过。
-- Human Shipping Decision: `GRANTED`（2026-10-05，负责人要求推送 sz/hot-monter）
+- Human Shipping Decision: `GRANTED`（2026-10-05，负责人要求推送 sz/hot-monitor）
   - 注意：Shipping Authorization 是本次 v1 的明确授权；验证状态与 shipping 是两个独立 Gate。
 
 Shipping Authorization 不改变 Verification Status；风险接受不能把未知结果写成通过。

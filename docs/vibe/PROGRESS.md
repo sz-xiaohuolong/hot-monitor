@@ -10,7 +10,7 @@
 
 - Current Requirement Baseline: `docs/vibe/releases/v1/SPEC.md`（v1 已冻结）
 - Current Release: `v1`（docs/vibe/releases/v1/）
-- Last Stable Commit/Artifact: `4501029`（已推送 sz/hot-monter master）
+- Last Stable Commit/Artifact: `4501029`（已推送 sz/hot-monitor master）
 - Last Updated: 2026-10-05
 
 ## 任务状态
