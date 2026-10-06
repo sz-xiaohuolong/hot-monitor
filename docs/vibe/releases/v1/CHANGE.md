@@ -37,6 +37,6 @@
 ## Related Requirements and Decisions
 
 - REQ: 见 `SPEC.md`（REQ-01~05）
-- DEC: `DEC-001-provider-abstraction.md`、`DEC-002-jev-prefilter.md`
+- DEC: 决策 D1/D2（见 `PROPOSED_DESIGN.md`）
 
 本文件只描述相对上一 Release 的变化；当前完整产品行为以本 Release 的 `SPEC.md` 为准。

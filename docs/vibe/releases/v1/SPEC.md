@@ -80,7 +80,7 @@
 
 ### REQ-04 — Jev 决策预筛（可选，默认关闭）
 
-- Source: PROJECT_BRIEF §In Scope；DEC-002
+- Source: PROJECT_BRIEF §In Scope；决策 D2（PROPOSED_DESIGN）
 - Actors: 部署者（开关）
 - Preconditions: `JEV_ENABLED=true` + `JEV_API_KEY`
 - Trigger: `analyzeContent` 调用
@@ -131,7 +131,7 @@
 | REQ-01 | AC-01~03 | PROJECT_BRIEF §In Scope |
 | REQ-02 | AC-04~06 | PROJECT_BRIEF §In Scope |
 | REQ-03 | AC-07~08 | PROJECT_BRIEF §In Scope |
-| REQ-04 | AC-09~12 | DEC-002 |
+| REQ-04 | AC-09~12 | 决策 D2（PROPOSED_DESIGN） |
 | REQ-05 | AC-13~14 | 负责人决策 |
 
 ## Limitations & Disclaimers

@@ -10,7 +10,7 @@
 | 当前架构 | `docs/vibe/TECH_DESIGN.md` | `已核验` | 基于当前代码/配置/运行证据编写（2026-10-05） |
 | 当前进度 | `docs/vibe/PROGRESS.md` | `已核验` | 由 Git/测试核验 |
 | 当前 Release | `docs/vibe/releases/v1/`（PROJECT_BRIEF/SPEC/CHANGE/PROPOSED_DESIGN/IMPLEMENTATION_PLAN/VERIFICATION） | `READY_TO_SHIP` | v1 已推送 `4501029` |
-| 决策记录 | `docs/vibe/decisions/DEC-001-provider-abstraction.md`、`DEC-002-jev-prefilter.md` | `已记录` | 跨版本决策集中存放 |
+| 决策记录 | 并入 `docs/vibe/releases/v1/PROPOSED_DESIGN.md`（决策 D1/D2） | `已记录` | 2026-10-05 起不再单列 decisions/ 目录，决策记录并入 release 的 PROPOSED_DESIGN |
 | Bug 记录 | `docs/vibe/bugs/` | `缺失` | 本会话发现 3 个已知问题，记录于 PROGRESS 风险表，未开 BUG 文档 |
 | 测试与验证 | `server/src/__tests__/` + `docs/vibe/releases/v1/VERIFICATION.md` | `已核验` | 命令见 VERIFICATION |
 | 本地运行 | `docs/LOCAL_SETUP.md` | `已核验` | 已同步扫描周期变更 |

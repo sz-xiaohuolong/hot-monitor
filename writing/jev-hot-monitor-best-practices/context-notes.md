@@ -8,7 +8,7 @@
   - `server/src/services/ai.ts`：`analyzeContent` 两级过滤流水线，Jev 保守粗筛拦截明确垃圾（`isReal < 0.15` 或 `relevanceScore === 0`），幸存者继续交由 LLM 进行全量语义精判并生成 `relevanceReason` 和 `summary`。
   - `server/src/scripts/verifyJevConnection.ts`：Jev 端到端连通性与真实调用验证脚本。
   - `server/src/__tests__/jevClient.test.ts`：17 个 Jev 客户端单测，全量 145 测试回归通过。
-  - `docs/vibe/decisions/DEC-002-jev-prefilter.md` 与 `docs/vibe/releases/v1/`：Jev 预筛层架构决策与 v1 验证记录。
+  - `docs/vibe/releases/v1/PROPOSED_DESIGN.md`（决策 D2）与 `docs/vibe/releases/v1/`：Jev 预筛层架构决策与 v1 验证记录。
   - `docs/vibe/PROGRESS.md`：真实运行数据，真实扫描拦截 20 条垃圾，Ark 429 配额耗尽时 Jev 仍能独立工作。
 
 ## 二、浏览器尝试台账（URL Attempt Ledger）

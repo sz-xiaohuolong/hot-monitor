@@ -4,7 +4,7 @@
 
 - Applies To Release: 未建立（描述当前工作树实现，2026-10-05 核验）
 - Last Updated: 2026-10-05
-- Related Decisions: DEC-001（provider 抽象）、DEC-002（Jev 预筛）
+- Related Decisions: 决策 D1（provider 抽象）、决策 D2（Jev 预筛）——见 `releases/v1/PROPOSED_DESIGN.md`
 
 ## Architecture Summary
 
@@ -32,10 +32,10 @@ AI 审核两级（JEV_ENABLED=true 时）：
 | `server/src/index.ts` | 服务装配、cron 调度（`0 */2 * * *`）、路由注册 | HTTP :3001 / WS | express, socket.io, node-cron | 定时抓取 P0 |
 | `jobs/scanManager.ts` | 单飞锁、进度广播、取消检查点 | `tryStartScan/requestCancel/getScanSnapshot` | socket.io | 手动/定时扫描 |
 | `jobs/hotspotChecker.ts` | 扫描编排：抓取→过滤→AI→入库 | `executeScan(ctx, io)` | 全部 services | 核心闭环 |
-| `services/aiProvider.ts` | provider 解析（openrouter/ark）、模型/密钥、惰性 env 读取 | `resolveProviderConfig/requireProviderConfig` | — | DEC-001 |
-| `services/openaiCompatibleClient.ts` | OpenAI 兼容 Chat Completions 客户端（fetch，60s 超时） | `chatCompletion/extractMessageContent` | fetch | DEC-001 |
+| `services/aiProvider.ts` | provider 解析（openrouter/ark）、模型/密钥、惰性 env 读取 | `resolveProviderConfig/requireProviderConfig` | — | 决策 D1 |
+| `services/openaiCompatibleClient.ts` | OpenAI 兼容 Chat Completions 客户端（fetch，60s 超时） | `chatCompletion/extractMessageContent` | fetch | 决策 D1 |
 | `services/ai.ts` | 查询扩展 + 内容审核 + Jev 粗筛 + fallback | `expandKeyword/analyzeContent/batchAnalyze` | aiProvider, client, jevClient | AI 审核 |
-| `services/jevClient.ts` | Jev（TypeSafe System One）决策客户端，走 QuickRouter `/v1/systemone`，axios（支持代理） | `requestJevDecisions/noulValue/scoreValue/choiceValue` | axios, `JEV_API_KEY` | DEC-002 |
+| `services/jevClient.ts` | Jev（TypeSafe System One）决策客户端，走 QuickRouter `/v1/systemone`，axios（支持代理） | `requestJevDecisions/noulValue/scoreValue/choiceValue` | axios, `JEV_API_KEY` | 决策 D2 |
 | `services/sourceHealth.ts` | 信源健康度账本（内存） | `runSource/recordHealth/getHealthSnapshot` | — | 失败静默修复 |
 | `services/newSources.ts` | 6 新信源（掘金/CSDN/OSChina/GitHub/PH/微信），失败抛异常 | `searchJuejin/…/searchWeixinSogou` | axios, cheerio | 多数据源 |
 | `services/newSourcesAggregator.ts` | 新源并行聚合 + 健康度记录 | `searchNewSources(query)` | newSources, sourceHealth | 多数据源 |

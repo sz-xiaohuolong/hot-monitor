@@ -24,7 +24,7 @@
 | Current Progress | `docs/vibe/PROGRESS.md` | 已核验 |
 | Product Baseline | `docs/REQUIREMENTS.md` | 基线存在，未冻结 |
 | Current Release | `docs/vibe/releases/v1/`（PROJECT_BRIEF/SPEC/CHANGE/PROPOSED_DESIGN/IMPLEMENTATION_PLAN/VERIFICATION） | 已建立（v1） |
-| Decisions | `docs/vibe/decisions/`（DEC-001/DEC-002） | 已记录 |
+| Decisions | 并入 `docs/vibe/releases/v1/PROPOSED_DESIGN.md`（决策 D1/D2） | 已记录 |
 | Bugs | `docs/vibe/bugs/` | 缺失（记录于 PROGRESS 风险表） |
 
 ## Supported Commands

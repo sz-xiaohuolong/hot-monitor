@@ -21,7 +21,7 @@
 | 扫描频率 30min → 2h | VERIFIED | `index.ts` cron + 前端两处文案 + 4 份文档同步 | cron 表达式验证（整点触发）；重启后横幅显示 2h | 无 |
 | 新增 6 信源 | VERIFIED | `newSources.ts` + 聚合器；source 类型扩展；前端图标/标签/筛选 | `verifyNewSources.ts` 真实抓取 6/6 成功共 64 条；全量扫描入库 github=13, weixin=5, oschina=1 | 掘金/CSDN/PH 在真实扫描中被相关性阈值过滤（预期行为，非故障） |
 | 信源健康度（失败静默修复） | VERIFIED（新源）/ 部分（既有源） | `sourceHealth.ts` + `GET /api/scan/health` + 前端告警横幅 | 扫描后 health 接口返回 12 源逐条状态；`failed:[]` | 既有 6 collector 内部吞错，健康表无法识别其失败（见风险表） |
-| Jev 决策预筛（DEC-002） | VERIFIED | `jevClient.ts`（QuickRouter /v1/systemone）+ `analyzeContent` 两级流水线（保守粗筛） | 17 单测；`verifyJevConnection.ts` 真实端到端成功；真实扫描拦截 20 条垃圾、Ark 429 时 Jev 独立工作 | 无（阈值 `JEV_ISREAL_REJECT=0.15` 可调） |
+| Jev 决策预筛（决策 D2） | VERIFIED | `jevClient.ts`（QuickRouter /v1/systemone）+ `analyzeContent` 两级流水线（保守粗筛） | 17 单测；`verifyJevConnection.ts` 真实端到端成功；真实扫描拦截 20 条垃圾、Ark 429 时 Jev 独立工作 | 无（阈值 `JEV_ISREAL_REJECT=0.15` 可调） |
 
 ## Slice 进度
 
@@ -49,7 +49,7 @@
 | Bug | Ark 5 小时配额限制（本轮 429 实证） | 幸存者通道支持 QuickRouter，或提升 Ark 配额（用户决定） |
 | Decision | 是否提交当前 36 个文件的工作树；是否建 Release 并冻结范围 | 用户 |
 | Decision | `skills/hot-monitor` 与 server 双实现是否同步新源 | 用户（已记录于 DOCUMENT_MAP） |
-| Decision | Jev 决策预筛层是否接入（TypeSafe System One 模型） | `docs/vibe/releases/v1/`（SPEC REQ-04 + VERIFICATION；决策见 `docs/vibe/decisions/DEC-002-jev-prefilter.md`）| 已批准并实现；当前按负责人要求 JEV_ENABLED=false 关闭 |
+| Decision | Jev 决策预筛层是否接入（TypeSafe System One 模型） | `docs/vibe/releases/v1/`（SPEC REQ-04 + VERIFICATION + PROPOSED_DESIGN 决策 D2）| 已批准并实现；当前按负责人要求 JEV_ENABLED=false 关闭 |
 | Decision | JEV_API_KEY 已暴露于对话，建议轮换 | 安全 | 用户（验证完成后轮换） |
 
 ## Debug Snapshot

@@ -12,5 +12,13 @@
     "topic": "关于Jev模型在热点监控项目中的最佳实践"
   },
   "schema_version": 2,
-  "status": "WAITING_OUTLINE_APPROVAL"
+  "status": "DRAFTING",
+  "outline_approval": {
+    "decision": "approved",
+    "target": "outline",
+    "outline_sha256": "3b149e11489edb1e98cc6faef0cd110e848d17514e6f07da2951300e16269b15",
+    "writing_references_sha256": "f5e271486d0abd18a35a533e85dd9ed7e7766fef53a7be7e94322c9495599679",
+    "approved_by": "human",
+    "approved_at": "2026-10-06T14:58:39+08:00"
+  }
 }
